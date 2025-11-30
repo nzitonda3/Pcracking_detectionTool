@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<div class="controls">
+  <form method="post" action="/run_audit" style="display:inline;">
+    <button type="submit">Run Password Audit (John — 30s per user)</button>
+  </form>
+  <a class="btn" href="/simulate">Simulate Attack</a>
+  <a class="btn" href="/check_password">Password Checker</a>
+  <a class="btn" href="/logout">Logout</a>
+</div>
+
+<section>
+  <h3>PCFG Results (recent)</h3>
+  <table>
+    <thead><tr><th>User</th><th>PCFG guesses</th><th>Pattern</th><th>Time</th></tr></thead>
+    <tbody>
+    {% for r in pcfg %}
+      <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td><td>{{ r[3] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>John The Ripper Results (recent)</h3>
+  <table>
+    <thead><tr><th>User</th><th>Guesses</th><th>Cracked</th><th>Cracked password</th><th>Audit time (s)</th></tr></thead>
+    <tbody>
+    {% for r in jtr %}
+      <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ 'Yes' if r[2] else 'No' }}</td><td>{{ r[3] }}</td><td>{{ r[4] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Detection Alerts (recent)</h3>
+  <table>
+    <thead><tr><th>Type</th><th>Details</th><th>Time</th></tr></thead>
+    <tbody>
+    {% for a in alerts %}
+      <tr><td>{{ a[0] }}</td><td>{{ a[1] }}</td><td>{{ a[2] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h3>Recent Logs</h3>
+  <table>
+    <thead><tr><th>User</th><th>IP</th><th>Status</th><th>Fingerprint</th><th>Time</th></tr></thead>
+    <tbody>
+    {% for l in logs %}
+      <tr><td>{{ l[0] }}</td><td>{{ l[1] }}</td><td>{{ l[2] }}</td><td>{{ l[3][:10] }}</td><td>{{ l[4] }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% endblock %}

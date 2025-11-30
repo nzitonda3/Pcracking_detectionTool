@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Simulate Attack</h2>
+
+<form method="post">
+  <label>Attack Type</label>
+  <select name="attack_type">
+    <option value="bruteforce">Brute-force (many passwords -> single user)</option>
+    <option value="stuffing">Credential stuffing (one password -> many users)</option>
+    <option value="spray">Password spraying (one password across many users)</option>
+  </select>
+
+  <label>Usernames (comma-separated)</label>
+  <input type="text" name="usernames" placeholder="alice,bob,john">
+
+  <label>Passwords (comma-separated)</label>
+  <input type="text" name="passwords" placeholder="Password123,123456">
+
+  <label>Source IP</label>
+  <input type="text" name="ip" placeholder="1.2.3.4">
+
+  <label>Attempts per user</label>
+  <input type="number" name="count" value="3">
+
+  <button type="submit">Start Simulation</button>
+</form>
+
+<p><a href="/admin">Back to Admin</a></p>
+{% endblock %}

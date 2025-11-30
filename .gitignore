@@ -1,0 +1,10 @@
+# Python virtual environment folder
+venv/
+
+# Ignore any file ending with .db, anywhere in the project
+*.db
+
+# Add other common files you might want to ignore, like:
+# *.pyc
+# __pycache__/
+# .env

@@ -1,57 +1,65 @@
-# pcfg_utils.py
-import re
-from math import log10
 from database import insert_pcfg
 from datetime import datetime
 
-# simple probabilities chosen for demonstration (tweakable)
-PROB_LOWER = 0.09
-PROB_UPPER = 0.06
-PROB_DIGIT = 0.10
-PROB_SYMBOL = 0.02
-
-def identify_pattern(password):
-    pattern = ""
+def identify_pattern_and_groups(password):
     groups = []
-    # collapse consecutive identical classes into counts, e.g. U2L4D2 -> (U,2),(L,4),(D,2)
     cur = None
-    count = 0
+    cnt = 0
     for ch in password:
         cls = 'L' if ch.islower() else ('U' if ch.isupper() else ('D' if ch.isdigit() else 'S'))
         if cls == cur:
-            count += 1
+            cnt += 1
         else:
             if cur is not None:
-                groups.append((cur, count))
+                groups.append((cur, cnt))
             cur = cls
-            count = 1
+            cnt = 1
     if cur is not None:
-        groups.append((cur, count))
-
-    # build pattern string
+        groups.append((cur, cnt))
     pattern = ''.join([f"{g[0]}{g[1]}" for g in groups])
     return pattern, groups
 
 def estimate_guesses(password):
-    # simple model: multiply probabilities per character class
-    pattern, groups = identify_pattern(password)
-    prob = 1.0
-    for cls, cnt in groups:
-        if cls == 'L':
-            prob *= (PROB_LOWER ** cnt)
-        elif cls == 'U':
-            prob *= (PROB_UPPER ** cnt)
-        elif cls == 'D':
-            prob *= (PROB_DIGIT ** cnt)
-        else:
-            prob *= (PROB_SYMBOL ** cnt)
-
-    # crude conversion to guesses:
-    if prob <= 0:
-        guesses = 10**6
-    else:
-        guesses = int(1.0 / prob)
-    return guesses, pattern
+    """Estimate guesses needed to crack password using common wordlist ranking.
+    
+    This uses a realistic approach: if password is in common wordlist, rank it low.
+    Otherwise, estimate based on character composition complexity.
+    """
+    pattern, groups = identify_pattern_and_groups(password)
+    
+    # Common passwords and their estimated rank in typical wordlists
+    COMMON_PASSWORDS = {
+        'password': 1,
+        '123456': 2,
+        '12345678': 3,
+        'qwerty': 4,
+        'abc123': 5,
+        'monkey': 6,
+        '1234567': 7,
+        'letmein': 8,
+        'trustno1': 9,
+        'dragon': 10,
+    }
+    
+    pwd_lower = password.lower()
+    if pwd_lower in COMMON_PASSWORDS:
+        return COMMON_PASSWORDS[pwd_lower], pattern
+    
+    # For uncommon passwords, estimate based on pattern complexity
+    # Length multiplier
+    length_score = len(password) * 50
+    
+    # Complexity bonus
+    has_lower = any(c.islower() for c in password)
+    has_upper = any(c.isupper() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_symbol = any(not c.isalnum() for c in password)
+    
+    complexity = sum([has_lower, has_upper, has_digit, has_symbol])
+    complexity_score = 100 * (complexity ** 2)  # Non-linear increase
+    
+    guesses = length_score + complexity_score
+    return max(guesses, 100), pattern
 
 def analyze_and_store(user_id, password):
     guesses, pattern = estimate_guesses(password)

@@ -27,7 +27,7 @@ header h1 {
 
 h2 { color:#0b3d91; text-align:center; }
 form { max-width:600px; margin:10px auto; }
-input[type="text"], input[type="password"], select, input[type="number"] {
+input[type="text"], input[type="password"], select, input[type="number"], input[type="file"] {
   width:100%;
   padding:10px;
   margin:8px 0;

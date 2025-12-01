@@ -26,7 +26,7 @@
 <section>
   <h3>John The Ripper Results (recent)</h3>
   <table>
-    <thead><tr><th>User</th><th>Guesses</th><th>Cracked</th><th>Cracked password</th><th>Audit time (s)</th></tr></thead>
+    <thead><tr><th>User</th><th>Guesses</th><th>Cracked?</th><th>Cracked password</th><th>Audit time (ms)</th></tr></thead>
     <tbody>
     {% for r in jtr %}
       <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ 'Yes' if r[2] else 'No' }}</td><td>{{ r[3] }}</td><td>{{ r[4] }}</td></tr>
@@ -50,10 +50,10 @@
 <section>
   <h3>Recent Logs</h3>
   <table>
-    <thead><tr><th>User</th><th>IP</th><th>Status</th><th>Fingerprint</th><th>Time</th></tr></thead>
+    <thead><tr><th>User</th><th>IP</th><th>Status</th><th>Time</th></tr></thead>
     <tbody>
     {% for l in logs %}
-      <tr><td>{{ l[0] }}</td><td>{{ l[1] }}</td><td>{{ l[2] }}</td><td>{{ l[3][:10] }}</td><td>{{ l[4] }}</td></tr>
+      <tr><td>{{ l[0] }}</td><td>{{ l[1] }}</td><td>{{ l[2] }}</td><td>{{ l[3] }}</td></tr>
     {% endfor %}
     </tbody>
   </table>

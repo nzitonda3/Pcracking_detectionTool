@@ -12,7 +12,7 @@ def init_db():
     conn = get_conn()
     c = conn.cursor()
 
-    # users (store bcrypt hash)
+    # Users (store sha512 hex)
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,14 +37,14 @@ def init_db():
         created_at TEXT
     )""")
 
-    # JTR results
+    # JTR results (store audit_time in milliseconds)
     c.execute("""
     CREATE TABLE IF NOT EXISTS jtr_results (
         user_id INTEGER,
         guesses INTEGER,
         cracked INTEGER,
         cracked_password TEXT,
-        audit_time TEXT
+        audit_time INTEGER
     )""")
 
     # login attempts logs
@@ -66,11 +66,17 @@ def init_db():
         details TEXT,
         timestamp TEXT
     )""")
+    # config table for runtime settings
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS config (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )""")
 
     conn.commit()
     conn.close()
 
-# helper wrappers
+# user helpers
 def insert_user(username, password_hash):
     conn = get_conn()
     c = conn.cursor()
@@ -96,6 +102,7 @@ def list_users():
     conn.close()
     return rows
 
+# plaintext temp
 def store_plaintext(user_id, password):
     conn = get_conn()
     c = conn.cursor()
@@ -111,6 +118,7 @@ def delete_plaintext_for_user(user_id):
     conn.commit()
     conn.close()
 
+# pcfg
 def insert_pcfg(user_id, guesses, pattern):
     conn = get_conn()
     c = conn.cursor()
@@ -119,6 +127,16 @@ def insert_pcfg(user_id, guesses, pattern):
     conn.commit()
     conn.close()
 
+def fetch_pcfg_rows(limit=100):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT u.username, p.guesses, p.pattern, p.created_at FROM pcfg_analysis p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC LIMIT ?",
+              (limit,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+# jtr
 def insert_jtr_result(user_id, guesses, cracked, cracked_password, audit_time):
     conn = get_conn()
     c = conn.cursor()
@@ -127,6 +145,24 @@ def insert_jtr_result(user_id, guesses, cracked, cracked_password, audit_time):
     conn.commit()
     conn.close()
 
+def fetch_jtr_rows(limit=100):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT u.username, j.guesses, j.cracked, j.cracked_password, j.audit_time FROM jtr_results j JOIN users u ON j.user_id = u.id ORDER BY j.audit_time DESC LIMIT ?",
+              (limit,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def clear_jtr_results():
+    """Delete all rows from jtr_results table."""
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("DELETE FROM jtr_results")
+    conn.commit()
+    conn.close()
+
+# logs & alerts
 def insert_login_log(username, ip, status, fingerprint):
     conn = get_conn()
     c = conn.cursor()
@@ -138,7 +174,7 @@ def insert_login_log(username, ip, status, fingerprint):
 def fetch_recent_logs(limit=200):
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT username, ip, status, fingerprint, timestamp FROM login_logs ORDER BY id DESC LIMIT ?", (limit,))
+    c.execute("SELECT username, ip, status, timestamp FROM login_logs ORDER BY id DESC LIMIT ?", (limit,))
     rows = c.fetchall()
     conn.close()
     return rows
@@ -159,18 +195,27 @@ def fetch_recent_alerts(limit=50):
     conn.close()
     return rows
 
-def fetch_pcfg_rows():
+def get_last_alert_time(alert_type, details):
+    """Return the timestamp string of the most recent alert with same type and details, or None."""
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT u.username, p.guesses, p.pattern, p.created_at FROM pcfg_analysis p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC")
-    rows = c.fetchall()
+    c.execute("SELECT timestamp FROM alerts WHERE alert_type=? AND details=? ORDER BY id DESC LIMIT 1", (alert_type, details))
+    row = c.fetchone()
     conn.close()
-    return rows
+    return row[0] if row else None
 
-def fetch_jtr_rows():
+def set_config(key, value):
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT u.username, j.guesses, j.cracked, j.cracked_password, j.audit_time FROM jtr_results j JOIN users u ON j.user_id = u.id ORDER BY j.audit_time DESC")
-    rows = c.fetchall()
+    c.execute("REPLACE INTO config (key, value) VALUES (?, ?)", (key, value))
+    conn.commit()
     conn.close()
-    return rows
+
+
+def get_config(key, default=None):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT value FROM config WHERE key=?", (key,))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else default

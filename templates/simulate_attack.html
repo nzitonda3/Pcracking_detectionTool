@@ -2,7 +2,7 @@
 {% block content %}
 <h2>Simulate Attack</h2>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   <label>Attack Type</label>
   <select name="attack_type">
     <option value="bruteforce">Brute-force (many passwords -> single user)</option>
@@ -15,6 +15,9 @@
 
   <label>Passwords (comma-separated)</label>
   <input type="text" name="passwords" placeholder="Password123,123456">
+
+  <label>Or upload a wordlist (one password per line)</label>
+  <input type="file" name="wordlist" accept=".txt">
 
   <label>Source IP</label>
   <input type="text" name="ip" placeholder="1.2.3.4">

@@ -9,6 +9,10 @@ Lightweight Flask app to simulate password cracking audits and detection. The pr
 - PCFG analysis: `pcfg_utils.py` (simple heuristics and storage).
 - Detection & simulation: `detection.py`, `simulate_engine.py`.
 
+Platform
+--------
+- This project is intended to run on Linux systems (tested on Ubuntu). For Windows, use Windows Subsystem for Linux (WSL) and follow the Linux setup steps. Native Windows support is not guaranteed.
+
 Requirements
 ------------
 - Python 3.8+

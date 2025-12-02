@@ -51,11 +51,18 @@ def run_jtr_on_hash(user_id, stored_hexdigest):
             # John accepts raw hex hashes in the format user:hash
             f.write(f"user{user_id}:{stored_hexdigest}\n")
 
-        # Determine wordlist: prefer DB config `JTR_WORDLIST`, then environment `WORDLIST_PATH`, then fallbacks
+        # Determine wordlist preference order:
+        # 1) DB-configured path (`JTR_WORDLIST`)
+        # 2) Project-local `wordlists/rockyou.txt`
+        # 3) Environment default `WORDLIST_PATH`
+        # 4) common system fallback paths
         wordlist = None
         db_wordlist = get_config('JTR_WORDLIST')
+        project_wordlist = os.path.join(os.path.dirname(__file__), 'wordlists', 'rockyou.txt')
         if db_wordlist and os.path.exists(db_wordlist):
             wordlist = db_wordlist
+        elif os.path.exists(project_wordlist):
+            wordlist = project_wordlist
         elif WORDLIST_PATH and os.path.exists(WORDLIST_PATH):
             wordlist = WORDLIST_PATH
         else:

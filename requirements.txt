@@ -2,6 +2,7 @@
 # This project is intended to run on Linux systems (WSL recommended for Windows).
 
 aiosqlite==0.20.0
+john
 altair==5.4.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
